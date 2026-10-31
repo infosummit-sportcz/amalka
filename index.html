@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#2f6f62">
+<title>Amálka · hlídání</title>
+<style>
+:root{
+  --bg:#f5f3ee;--card:#fff;--ink:#1f2a28;--mut:#6a7673;--line:#e3dfd6;
+  --brand:#2f6f62;--brand-ink:#fff;--accent:#e8f1ee;--warn:#b4531a;--warn-bg:#fdf0e6;--ok:#1f7a45;--ok-bg:#e6f4ec;--danger:#b3261e;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#161b1a;--card:#1f2624;--ink:#e8eeec;--mut:#9aa8a4;--line:#313b38;--brand:#4fa593;--brand-ink:#0d1f1b;--accent:#243a35;--warn:#e9a06b;--warn-bg:#3a2a1c;--ok:#6fcf97;--ok-bg:#1d3327;--danger:#f2877f}
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--brand);color:var(--brand-ink);padding:14px 16px 0;position:sticky;top:0;z-index:5}
+header h1{margin:0 0 10px;font-size:20px;font-weight:700}
+nav{display:flex;gap:4px;max-width:760px;margin:0 auto}
+nav button{flex:1;border:0;background:transparent;color:inherit;opacity:.75;font:inherit;font-weight:600;padding:10px 4px;border-bottom:3px solid transparent;cursor:pointer}
+nav button[aria-selected=true]{opacity:1;border-bottom-color:currentColor}
+.head-in{max-width:760px;margin:0 auto}
+main{max-width:760px;margin:0 auto;padding:14px 16px 80px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:0 0 14px}
+.card h2{margin:0 0 10px;font-size:17px}
+label{display:block;font-size:13px;color:var(--mut);margin:10px 0 4px}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:44px}
+input:focus,select:focus{outline:2px solid var(--brand);outline-offset:1px}
+.row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
+.seg{display:flex;gap:8px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{flex:1;margin:0;text-align:center;padding:11px 8px;border:1px solid var(--line);border-radius:10px;font-size:16px;color:var(--ink);cursor:pointer;background:var(--bg)}
+.seg input:checked+label{background:var(--brand);color:var(--brand-ink);border-color:var(--brand);font-weight:700}
+.seg input:focus-visible+label{outline:2px solid var(--brand);outline-offset:2px}
+button.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11px 16px;min-height:44px;cursor:pointer;background:var(--brand);color:var(--brand-ink)}
+button.btn.sec{background:var(--accent);color:var(--ink)}
+button.btn.danger{background:transparent;color:var(--danger);border:1px solid var(--line)}
+button.link{background:none;border:0;color:var(--brand);font:inherit;font-size:14px;padding:6px 4px;cursor:pointer;text-decoration:underline}
+.actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.preview{margin-top:10px;padding:10px;border-radius:10px;background:var(--accent);font-weight:600;min-height:42px}
+.preview.err{background:var(--warn-bg);color:var(--warn)}
+.banner{background:var(--warn-bg);color:var(--warn);padding:10px 12px;border-radius:10px;margin:0 0 14px;font-size:14px}
+.mnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 14px}
+.mnav b{font-size:18px;text-transform:capitalize}
+.mnav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:20px;cursor:pointer}
+.day h3{margin:0 0 6px;font-size:15px;display:flex;justify-content:space-between;gap:8px}
+.day h3 span:last-child{color:var(--mut);font-weight:600}
+.item{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.item:first-of-type{border-top:0}
+.item .main{flex:1;min-width:0}
+.item .sub{color:var(--mut);font-size:13px;overflow-wrap:anywhere}
+.item .amt{font-weight:700;white-space:nowrap}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--accent);margin-right:6px}
+.chip.x{background:var(--warn-bg);color:var(--warn)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px;margin:6px 0 10px}
+.tbl th{text-align:left;color:var(--mut);font-weight:600;font-size:12px;padding:4px 4px;border-bottom:1px solid var(--line)}
+.tbl td{padding:6px 4px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl .r{text-align:right;white-space:nowrap}
+.sum{display:flex;justify-content:space-between;padding:3px 0}
+.sum.total{font-size:18px;font-weight:800;border-top:2px solid var(--ink);margin-top:6px;padding-top:8px}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:13px;font-weight:700}
+.badge.paid{background:var(--ok-bg);color:var(--ok)}
+.badge.unpaid{background:var(--warn-bg);color:var(--warn)}
+.empty{color:var(--mut);text-align:center;padding:20px 0}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;z-index:20;display:flex;gap:12px;align-items:center;max-width:92vw;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+.toast button{background:none;border:0;color:inherit;font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
+details.card summary{font-weight:700;font-size:17px;cursor:pointer;min-height:28px}
+details.card[open] summary{margin-bottom:6px}
+.printonly{display:none}
+[hidden]{display:none!important}
+@media print{
+  header,.noprint,#tab-rec,#tab-set,.toast{display:none!important}
+  body{background:#fff;color:#000}
+  main{padding:0;max-width:none}
+  .card{border:1px solid #999;break-inside:avoid;background:#fff;color:#000}
+  .printonly{display:block}
+  .pay-edit{display:none!important}
+  :root{--mut:#444;--line:#bbb;--ink:#000}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-in">
+    <h1 id="title">Amálka · hlídání</h1>
+    <nav role="tablist">
+      <button role="tab" data-tab="rec" aria-selected="true">Záznamy</button>
+      <button role="tab" data-tab="set" aria-selected="false">Vyúčtování</button>
+      <button role="tab" data-tab="cfg" aria-selected="false">Nastavení</button>
+    </nav>
+  </div>
+</header>
+<main>
+
+<!-- ============ ZÁZNAMY ============ -->
+<section id="tab-rec">
+  <div id="rateWarn" class="banner" hidden>Nejdřív v <b>Nastavení</b> vyplňte hodinovou sazbu chův – jinak se hlídání spočítá za 0&nbsp;Kč.</div>
+
+  <div class="card">
+    <h2 id="entryTitle">Nové hlídání</h2>
+    <label>Chůva</label>
+    <div class="seg" id="entryNanny"></div>
+    <label for="eStart">Začátek hlídání</label>
+    <input type="datetime-local" id="eStart">
+    <label for="eEnd">Konec hlídání</label>
+    <input type="datetime-local" id="eEnd">
+    <div class="row">
+      <div><label for="eRate">Sazba Kč/hod</label><input type="number" id="eRate" inputmode="decimal" min="0" step="any"></div>
+      <div><label for="eNote">Poznámka</label><input type="text" id="eNote" placeholder="nepovinné"></div>
+    </div>
+    <div class="preview" id="ePreview">–</div>
+    <div class="actions">
+      <button class="btn" id="eSave">Uložit hlídání</button>
+      <button class="btn sec" id="eCancel" hidden>Zrušit úpravu</button>
+    </div>
+  </div>
+
+  <details class="card" id="xCard">
+    <summary id="xTitle">Přidat vícenáklad</summary>
+    <label>Kdo to zaplatil</label>
+    <div class="seg" id="extraNanny"></div>
+    <div class="row">
+      <div><label for="xDate">Datum</label><input type="date" id="xDate"></div>
+      <div><label for="xAmount">Částka (Kč)</label><input type="number" id="xAmount" inputmode="decimal" min="0" step="any"></div>
+    </div>
+    <label for="xDesc">Popis</label>
+    <input type="text" id="xDesc" placeholder="např. hračka, oběd">
+    <div class="actions">
+      <button class="btn" id="xSave">Uložit vícenáklad</button>
+      <button class="btn sec" id="xCancel" hidden>Zrušit úpravu</button>
+    </div>
+  </details>
+
+  <div class="mnav">
+    <button data-m="-1" aria-label="Předchozí měsíc">‹</button>
+    <b class="monthLabel"></b>
+    <button data-m="1" aria-label="Další měsíc">›</button>
+  </div>
+  <div id="recList"></div>
+</section>
+
+<!-- ============ VYÚČTOVÁNÍ ============ -->
+<section id="tab-set" hidden>
+  <div class="mnav noprint">
+    <button data-m="-1" aria-label="Předchozí měsíc">‹</button>
+    <b class="monthLabel"></b>
+    <button data-m="1" aria-label="Další měsíc">›</button>
+  </div>
+  <div id="settleList"></div>
+  <div class="actions noprint"><button class="btn sec" id="printBtn">Tisk / uložit jako PDF</button></div>
+</section>
+
+<!-- ============ NASTAVENÍ ============ -->
+<section id="tab-cfg" hidden>
+  <div class="card">
+    <h2>Hodinové sazby</h2>
+    <label for="cChild">Jméno dítěte</label>
+    <input type="text" id="cChild">
+    <div id="cNannies"></div>
+    <p style="font-size:13px;color:var(--mut);margin:12px 0 0">Sazba se při zápisu hlídání uloží k danému záznamu. Pozdější změna sazby proto nepřepočítá už zapsané hlídání (jde ale upravit u konkrétního záznamu).</p>
+  </div>
+  <div class="card">
+    <h2>Záloha dat</h2>
+    <p style="font-size:14px;color:var(--mut);margin:0 0 10px">Data jsou uložená jen v tomto prohlížeči na tomto zařízení. Čas od času si stáhněte zálohu, nebo data přeneste na druhý telefon přes soubor.</p>
+    <div class="actions" style="margin-top:0">
+      <button class="btn" id="expBtn">Stáhnout zálohu</button>
+      <button class="btn sec" id="impBtn">Nahrát zálohu</button>
+      <input type="file" id="impFile" accept="application/json,.json" hidden>
+    </div>
+    <div class="actions"><button class="btn danger" id="wipeBtn">Smazat všechna data</button></div>
+  </div>
+</section>
+
+</main>
+<div id="toastHost"></div>
+
+<script>
+/* ===== stav a ukládání ===== */
+const LS = 'amalka-hlidani-v1';
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:2});
+const money = n => nf.format(n).replace(/ /g,' ')+' Kč';
+const pad = n => String(n).padStart(2,'0');
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const METHODS = ['Hotově','Bankovní převod','Jiné'];
+
+function fresh(){
+  return {settings:{child:'Amálka',nannies:[{id:'irca',name:'Irča',rate:0},{id:'jana',name:'Jana',rate:0}]},entries:[],extras:[],payments:{}};
+}
+function load(){
+  try{
+    const j = JSON.parse(localStorage.getItem(LS));
+    if(j && j.settings && Array.isArray(j.entries)) return Object.assign(fresh(),j);
+  }catch(e){}
+  return fresh();
+}
+let S = load();
+function save(){
+  try{ localStorage.setItem(LS,JSON.stringify(S)); }
+  catch(e){ toast('Uložení do prohlížeče se nepodařilo – stáhněte si zálohu.'); }
+}
+
+/* ===== pomocné výpočty ===== */
+const nannyOf = id => S.settings.nannies.find(n=>n.id===id) || {id,name:id,rate:0};
+const mins = e => Math.max(0,Math.round((new Date(e.end)-new Date(e.start))/60000));
+const hm = m => Math.floor(m/60)+':'+pad(m%60)+' h';
+const amountOf = e => Math.round(mins(e)*Number(e.rate||0)/60*100)/100;
+const ymd = d => d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const localDT = d => ymd(d)+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+const tm = d => d.getHours()+':'+pad(d.getMinutes());
+function dayLabel(s,withYear){
+  const o = {weekday:'short',day:'numeric',month:'numeric'};
+  if(withYear) o.year = 'numeric';
+  return new Date(s+'T00:00').toLocaleDateString('cs-CZ',o);
+}
+function dmy(s){ const [y,m,d]=s.split('-'); return +d+'. '+(+m)+'. '+y; }
+function span(e){
+  const a = new Date(e.start), b = new Date(e.end);
+  if(ymd(a)===ymd(b)) return tm(a)+'–'+tm(b);
+  return tm(a)+' → '+(+ymd(b).slice(8))+'. '+(+ymd(b).slice(5,7))+'. '+tm(b);
+}
+
+/* ===== měsíc ===== */
+let cur = ymd(new Date()).slice(0,7);
+function monthLabel(k){ return new Date(k+'-01T00:00').toLocaleDateString('cs-CZ',{month:'long',year:'numeric'}); }
+function shiftMonth(d){ const [y,m]=cur.split('-').map(Number); const t=new Date(y,m-1+d,1); cur = t.getFullYear()+'-'+pad(t.getMonth()+1); }
+
+/* ===== toast s možností vrácení ===== */
+let toastTimer;
+function toast(msg,undo){
+  const h = $('#toastHost'); clearTimeout(toastTimer);
+  h.innerHTML = '<div class="toast" role="status"><span>'+esc(msg)+'</span>'+(undo?'<button id="undoBtn">Vrátit</button>':'')+'</div>';
+  if(undo) $('#undoBtn').onclick = ()=>{ undo(); h.innerHTML=''; };
+  toastTimer = setTimeout(()=>{ h.innerHTML=''; }, undo?7000:3000);
+}
+
+/* ===== záložky ===== */
+function showTab(t){
+  $$('nav button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===t));
+  ['rec','set','cfg'].forEach(k=>{ $('#tab-'+k).hidden = k!==t; });
+  renderAll(); window.scrollTo(0,0);
+}
+$$('nav button').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+$$('.mnav button').forEach(b=>b.onclick=()=>{ shiftMonth(+b.dataset.m); renderAll(); });
+
+/* ===== přepínače chův ===== */
+function nannySeg(host,name,val){
+  host.innerHTML = S.settings.nannies.map((n,i)=>
+    '<input type="radio" name="'+name+'" id="'+name+i+'" value="'+esc(n.id)+'"'+((val?val===n.id:i===0)?' checked':'')+'><label for="'+name+i+'">'+esc(n.name)+'</label>').join('');
+}
+const segVal = name => { const r = document.querySelector('input[name="'+name+'"]:checked'); return r?r.value:''; };
+const segSet = (name,v) => { $$('input[name="'+name+'"]').forEach(r=>r.checked = r.value===v); };
+
+/* ===== formulář hlídání ===== */
+let editEntry = null;
+function roundedNow(){ const d=new Date(); d.setMinutes(Math.floor(d.getMinutes()/15)*15,0,0); return d; }
+function resetEntryForm(keepNanny){
+  editEntry = null;
+  const nid = keepNanny ? segVal('en') : '';
+  nannySeg($('#entryNanny'),'en',nid);
+  $('#eStart').value = localDT(roundedNow());
+  $('#eEnd').value = '';
+  $('#eNote').value = '';
+  $('#eRate').value = nannyOf(segVal('en')).rate || '';
+  $('#entryTitle').textContent = 'Nové hlídání';
+  $('#eSave').textContent = 'Uložit hlídání';
+  $('#eCancel').hidden = true;
+  entryPreview();
+}
+function entryPreview(){
+  const s=$('#eStart').value, e=$('#eEnd').value, p=$('#ePreview');
+  p.classList.remove('err');
+  if(!s||!e){ p.textContent = 'Vyplňte začátek i konec hlídání.'; return null; }
+  const m = Math.round((new Date(e)-new Date(s))/60000);
+  if(m<=0){ p.textContent = 'Konec musí být později než začátek.'; p.classList.add('err'); return null; }
+  const rate = Number($('#eRate').value||0);
+  const amt = Math.round(m*rate/60*100)/100;
+  p.textContent = hm(m)+' × '+money(rate)+'/h = '+money(amt)+(m>16*60?'  ⚠ přes 16 hodin, zkontrolujte datum':'');
+  if(m>16*60) p.classList.add('err');
+  return m;
+}
+['eStart','eEnd','eRate'].forEach(id=>$('#'+id).addEventListener('input',entryPreview));
+$('#eStart').addEventListener('change',()=>{
+  const s=$('#eStart').value, e=$('#eEnd').value;
+  if(s && (!e || new Date(e)<=new Date(s))) { $('#eEnd').value = s; entryPreview(); }
+});
+$('#entryNanny').addEventListener('change',()=>{
+  if(!editEntry){ $('#eRate').value = nannyOf(segVal('en')).rate || ''; }
+  entryPreview();
+});
+$('#eSave').onclick = ()=>{
+  const m = entryPreview();
+  if(!m){ toast('Zkontrolujte začátek a konec hlídání.'); return; }
+  const rec = {id:editEntry||uid(),nanny:segVal('en'),start:$('#eStart').value,end:$('#eEnd').value,rate:Number($('#eRate').value||0),note:$('#eNote').value.trim()};
+  if(editEntry){ const i=S.entries.findIndex(x=>x.id===editEntry); if(i>=0) S.entries[i]=rec; }
+  else S.entries.push(rec);
+  save();
+  cur = rec.start.slice(0,7);
+  const wasEdit = !!editEntry;
+  resetEntryForm(true);
+  renderAll(); toast(wasEdit?'Hlídání upraveno.':'Hlídání uloženo.');
+};
+$('#eCancel').onclick = ()=>resetEntryForm(true);
+
+/* ===== formulář vícenákladu ===== */
+let editExtra = null;
+function resetExtraForm(date,keepNanny){
+  editExtra = null;
+  nannySeg($('#extraNanny'),'xn',keepNanny?segVal('xn'):'');
+  $('#xDate').value = date || ymd(new Date());
+  $('#xAmount').value = ''; $('#xDesc').value = '';
+  $('#xTitle').textContent = 'Přidat vícenáklad';
+  $('#xSave').textContent = 'Uložit vícenáklad';
+  $('#xCancel').hidden = true;
+}
+$('#xSave').onclick = ()=>{
+  const amt = Number($('#xAmount').value), desc = $('#xDesc').value.trim(), date = $('#xDate').value;
+  if(!date || !(amt>0) || !desc){ toast('Vyplňte datum, částku a popis.'); return; }
+  const rec = {id:editExtra||uid(),nanny:segVal('xn'),date,amount:amt,desc};
+  if(editExtra){ const i=S.extras.findIndex(x=>x.id===editExtra); if(i>=0) S.extras[i]=rec; }
+  else S.extras.push(rec);
+  save(); cur = date.slice(0,7);
+  const wasEdit = !!editExtra;
+  resetExtraForm(date,true); $('#xCard').open = false;
+  renderAll(); toast(wasEdit?'Vícenáklad upraven.':'Vícenáklad uložen.');
+};
+$('#xCancel').onclick = ()=>{ resetExtraForm(null,true); $('#xCard').open=false; };
+
+/* ===== seznam záznamů ===== */
+function renderRecords(){
+  $$('.monthLabel').forEach(x=>x.textContent = monthLabel(cur));
+  const es = S.entries.filter(e=>e.start.slice(0,7)===cur);
+  const xs = S.extras.filter(x=>x.date.slice(0,7)===cur);
+  const days = {};
+  es.forEach(e=>{ (days[e.start.slice(0,10)] ||= {e:[],x:[]}).e.push(e); });
+  xs.forEach(x=>{ (days[x.date] ||= {e:[],x:[]}).x.push(x); });
+  const keys = Object.keys(days).sort().reverse();
+  if(!keys.length){ $('#recList').innerHTML = '<div class="empty">V tomto měsíci zatím nic není.</div>'; return; }
+  $('#recList').innerHTML = keys.map(d=>{
+    const g = days[d];
+    const tot = g.e.reduce((a,e)=>a+amountOf(e),0)+g.x.reduce((a,x)=>a+x.amount,0);
+    const items = g.e.sort((a,b)=>a.start.localeCompare(b.start)).map(e=>
+      '<div class="item"><div class="main"><span class="chip">'+esc(nannyOf(e.nanny).name)+'</span>'+esc(span(e))+' · <b>'+hm(mins(e))+'</b>'+
+      '<div class="sub">'+money(e.rate)+'/h'+(e.note?' · '+esc(e.note):'')+'</div></div>'+
+      '<div class="amt">'+money(amountOf(e))+'</div>'+
+      '<button class="link" data-act="ee" data-id="'+e.id+'">Upravit</button><button class="link" data-act="de" data-id="'+e.id+'">Smazat</button></div>').join('')
+      + g.x.map(x=>
+      '<div class="item"><div class="main"><span class="chip x">'+esc(nannyOf(x.nanny).name)+'</span>'+esc(x.desc)+'<div class="sub">vícenáklad</div></div>'+
+      '<div class="amt">'+money(x.amount)+'</div>'+
+      '<button class="link" data-act="ex" data-id="'+x.id+'">Upravit</button><button class="link" data-act="dx" data-id="'+x.id+'">Smazat</button></div>').join('');
+    return '<div class="card day"><h3><span>'+esc(dayLabel(d))+'</span><span>'+money(tot)+'</span></h3>'+items+
+      '<div style="margin-top:6px"><button class="link" data-act="ax" data-date="'+d+'">+ vícenáklad k tomuto dni</button></div></div>';
+  }).join('');
+}
+$('#recList').addEventListener('click',ev=>{
+  const b = ev.target.closest('button[data-act]'); if(!b) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  if(act==='ax'){ resetExtraForm(b.dataset.date,true); $('#xCard').open=true; $('#xCard').scrollIntoView({behavior:'smooth',block:'start'}); return; }
+  if(act==='ee'){
+    const e = S.entries.find(x=>x.id===id); if(!e) return;
+    editEntry = id; segSet('en',e.nanny);
+    $('#eStart').value=e.start; $('#eEnd').value=e.end; $('#eRate').value=e.rate; $('#eNote').value=e.note||'';
+    $('#entryTitle').textContent='Úprava hlídání'; $('#eSave').textContent='Uložit změny'; $('#eCancel').hidden=false;
+    entryPreview(); window.scrollTo({top:0,behavior:'smooth'}); return;
+  }
+  if(act==='ex'){
+    const x = S.extras.find(v=>v.id===id); if(!x) return;
+    editExtra = id; segSet('xn',x.nanny);
+    $('#xDate').value=x.date; $('#xAmount').value=x.amount; $('#xDesc').value=x.desc;
+    $('#xTitle').textContent='Úprava vícenákladu'; $('#xSave').textContent='Uložit změny'; $('#xCancel').hidden=false;
+    $('#xCard').open=true; $('#xCard').scrollIntoView({behavior:'smooth'}); return;
+  }
+  if(act==='de'){
+    const i = S.entries.findIndex(x=>x.id===id); if(i<0) return;
+    const [rm] = S.entries.splice(i,1); save(); renderAll();
+    toast('Hlídání smazáno.',()=>{ S.entries.push(rm); save(); renderAll(); });
+  }
+  if(act==='dx'){
+    const i = S.extras.findIndex(x=>x.id===id); if(i<0) return;
+    const [rm] = S.extras.splice(i,1); save(); renderAll();
+    toast('Vícenáklad smazán.',()=>{ S.extras.push(rm); save(); renderAll(); });
+  }
+});
+
+/* ===== vyúčtování ===== */
+function calc(n){
+  const es = S.entries.filter(e=>e.nanny===n.id && e.start.slice(0,7)===cur).sort((a,b)=>a.start.localeCompare(b.start));
+  const xs = S.extras.filter(x=>x.nanny===n.id && x.date.slice(0,7)===cur).sort((a,b)=>a.date.localeCompare(b.date));
+  const m = es.reduce((a,e)=>a+mins(e),0);
+  const care = Math.round(es.reduce((a,e)=>a+amountOf(e),0)*100)/100;
+  const extra = Math.round(xs.reduce((a,x)=>a+x.amount,0)*100)/100;
+  return {es,xs,m,care,extra,total:Math.round((care+extra)*100)/100};
+}
+const payKey = n => cur+'|'+n.id;
+function summaryText(n){
+  const c = calc(n), p = S.payments[payKey(n)];
+  const L = [S.settings.child+' – hlídání, '+monthLabel(cur),'Chůva: '+n.name,''];
+  L.push('Hlídání:');
+  c.es.forEach(e=>L.push(' '+dmy(e.start.slice(0,10))+'  '+span(e)+'  '+hm(mins(e))+' × '+money(e.rate)+' = '+money(amountOf(e))+(e.note?'  ('+e.note+')':'')));
+  if(c.xs.length){ L.push('','Vícenáklady:'); c.xs.forEach(x=>L.push(' '+dmy(x.date)+'  '+x.desc+'  '+money(x.amount))); }
+  L.push('','Hlídání celkem: '+hm(c.m)+' = '+money(c.care),'Vícenáklady celkem: '+money(c.extra),'K úhradě celkem: '+money(c.total));
+  if(p && p.date) L.push('Uhrazeno: '+dmy(p.date)+(p.method?', '+p.method:'')+(p.note?' ('+p.note+')':''));
+  return L.join('\n');
+}
+function renderSettle(){
+  $$('.monthLabel').forEach(x=>x.textContent = monthLabel(cur));
+  const parts = [];
+  let grand = 0, any = false;
+  S.settings.nannies.forEach(n=>{
+    const c = calc(n);
+    if(!c.es.length && !c.xs.length) return;
+    any = true; grand += c.total;
+    const p = S.payments[payKey(n)] || {};
+    const paid = !!p.date;
+    const rowsE = c.es.map(e=>'<tr><td>'+esc(dmy(e.start.slice(0,10)))+'</td><td>'+esc(span(e))+(e.note?'<br><small>'+esc(e.note)+'</small>':'')+'</td><td class="r">'+hm(mins(e))+'</td><td class="r">'+money(e.rate)+'</td><td class="r">'+money(amountOf(e))+'</td></tr>').join('');
+    const rowsX = c.xs.map(x=>'<tr><td>'+esc(dmy(x.date))+'</td><td colspan="3">'+esc(x.desc)+'</td><td class="r">'+money(x.amount)+'</td></tr>').join('');
+    parts.push(
+      '<div class="card" data-n="'+esc(n.id)+'"><h2>'+esc(S.settings.child)+' – '+esc(n.name)+' <span style="font-weight:400;color:var(--mut)">· '+esc(monthLabel(cur))+'</span></h2>'+
+      (c.es.length?'<table class="tbl"><thead><tr><th>Datum</th><th>Od–do</th><th class="r">Hodin</th><th class="r">Sazba</th><th class="r">Částka</th></tr></thead><tbody>'+rowsE+'</tbody></table>':'')+
+      (c.xs.length?'<table class="tbl"><thead><tr><th>Datum</th><th colspan="3">Vícenáklady</th><th class="r">Částka</th></tr></thead><tbody>'+rowsX+'</tbody></table>':'')+
+      '<div class="sum"><span>Hlídání ('+hm(c.m)+')</span><b>'+money(c.care)+'</b></div>'+
+      '<div class="sum"><span>Vícenáklady</span><b>'+money(c.extra)+'</b></div>'+
+      '<div class="sum total"><span>K úhradě</span><span>'+money(c.total)+'</span></div>'+
+      '<div style="margin-top:12px"><span class="badge '+(paid?'paid':'unpaid')+'">'+(paid?'Uhrazeno '+esc(dmy(p.date))+(p.method?' · '+esc(p.method):''):'Neuhrazeno')+'</span></div>'+
+      (paid && p.note?'<div class="printonly">Poznámka: '+esc(p.note)+'</div>':'')+
+      '<div class="pay-edit noprint"><div class="row"><div><label>Datum úhrady</label><input type="date" data-f="date" value="'+esc(p.date||'')+'"></div>'+
+      '<div><label>Způsob úhrady</label><select data-f="method"><option value="">–</option>'+METHODS.map(m=>'<option'+(p.method===m?' selected':'')+'>'+m+'</option>').join('')+'</select></div></div>'+
+      '<label>Poznámka k úhradě</label><input type="text" data-f="note" value="'+esc(p.note||'')+'" placeholder="nepovinné">'+
+      '<div class="actions"><button class="btn sec" data-act="today">Uhrazeno dnes</button><button class="btn sec" data-act="copy">Kopírovat text</button></div></div></div>');
+  });
+  if(any && parts.length>1){
+    parts.unshift('<div class="card"><div class="sum total" style="border:0;margin:0;padding:0"><span>Celkem za měsíc</span><span>'+money(grand)+'</span></div></div>');
+  }
+  $('#settleList').innerHTML = any ? parts.join('') : '<div class="empty">Za tento měsíc není co vyúčtovat.</div>';
+  $('#printBtn').hidden = !any;
+}
+$('#settleList').addEventListener('change',ev=>{
+  const f = ev.target.dataset.f; const card = ev.target.closest('[data-n]');
+  if(!f||!card) return;
+  const n = nannyOf(card.dataset.n), k = payKey(n);
+  const p = S.payments[k] || (S.payments[k]={});
+  p[f] = ev.target.value; save(); renderSettle();
+});
+$('#settleList').addEventListener('click',ev=>{
+  const b = ev.target.closest('button[data-act]'); const card = ev.target.closest('[data-n]');
+  if(!b||!card) return;
+  const n = nannyOf(card.dataset.n), k = payKey(n);
+  if(b.dataset.act==='today'){
+    const p = S.payments[k] || (S.payments[k]={}); p.date = ymd(new Date()); save(); renderSettle(); return;
+  }
+  if(b.dataset.act==='copy'){
+    const t = summaryText(n);
+    const done = ()=>toast('Text zkopírován.');
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(done,()=>fallbackCopy(t,done));
+    else fallbackCopy(t,done);
+  }
+});
+function fallbackCopy(t,done){
+  const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){ toast('Kopírování se nepodařilo.'); }
+  ta.remove();
+}
+$('#printBtn').onclick = ()=>window.print();
+
+/* ===== nastavení ===== */
+function renderSettings(){
+  $('#cChild').value = S.settings.child;
+  $('#cNannies').innerHTML = S.settings.nannies.map((n,i)=>
+    '<div class="row"><div><label>Jméno chůvy</label><input type="text" data-i="'+i+'" data-f="name" value="'+esc(n.name)+'"></div>'+
+    '<div><label>Sazba Kč/hod</label><input type="number" inputmode="decimal" min="0" step="any" data-i="'+i+'" data-f="rate" value="'+(n.rate||'')+'"></div></div>').join('');
+}
+$('#cChild').addEventListener('change',()=>{ S.settings.child = $('#cChild').value.trim()||'Amálka'; save(); renderTitle(); });
+$('#cNannies').addEventListener('change',ev=>{
+  const t = ev.target, n = S.settings.nannies[+t.dataset.i]; if(!n) return;
+  if(t.dataset.f==='name') n.name = t.value.trim()||n.name;
+  else n.rate = Math.max(0,Number(t.value)||0);
+  save(); toast('Uloženo.'); nannySeg($('#entryNanny'),'en',segVal('en')); nannySeg($('#extraNanny'),'xn',segVal('xn'));
+  if(!editEntry) $('#eRate').value = nannyOf(segVal('en')).rate || '';
+  rateWarn();
+});
+$('#expBtn').onclick = ()=>{
+  const blob = new Blob([JSON.stringify(S,null,1)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'amalka-hlidani-zaloha-'+ymd(new Date())+'.json'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+$('#impBtn').onclick = ()=>$('#impFile').click();
+$('#impFile').onchange = ev=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const j = JSON.parse(r.result);
+      if(!j.settings||!Array.isArray(j.entries)||!Array.isArray(j.extras)) throw 0;
+      if(!confirm('Nahradit současná data zálohou ('+j.entries.length+' hlídání, '+j.extras.length+' vícenákladů)?')) return;
+      S = Object.assign(fresh(),j); save(); init(); toast('Záloha nahrána.');
+    }catch(e){ toast('Soubor není platná záloha.'); }
+  };
+  r.readAsText(f); ev.target.value='';
+};
+$('#wipeBtn').onclick = ()=>{
+  if(!confirm('Opravdu smazat všechna data v této aplikaci? Nejdřív si stáhněte zálohu.')) return;
+  S = fresh(); save(); init(); toast('Data smazána.');
+};
+
+/* ===== společné ===== */
+function renderTitle(){ $('#title').textContent = S.settings.child+' · hlídání'; document.title = S.settings.child+' · hlídání'; }
+function rateWarn(){ $('#rateWarn').hidden = S.settings.nannies.every(n=>n.rate>0); }
+function renderAll(){
+  renderTitle(); rateWarn();
+  if(!$('#tab-rec').hidden) renderRecords();
+  if(!$('#tab-set').hidden) renderSettle();
+  if(!$('#tab-cfg').hidden) renderSettings();
+}
+function init(){
+  resetEntryForm(false); resetExtraForm(null,false); renderAll();
+}
+init();
+</script>
+</body>
+</html>
